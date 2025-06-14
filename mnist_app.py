@@ -65,7 +65,7 @@ st.markdown("""
 def load_model():
     try:
         # First try loading with the modern .keras format
-        model = tf.keras.models.load_model("mnist_cnn.keras")  # Modern format
+        model = tf.keras.models.load_model("mnist_cnn.keras")
     except:
         try:
             # Fallback to .h5 with compatibility fix
