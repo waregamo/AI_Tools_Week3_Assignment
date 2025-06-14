@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 from PIL import Image
 
-# Set page config 
+# Set page config
 st.set_page_config(page_title="MNIST Digit Classifier", layout="centered")
 
 # Custom CSS for centered layout
@@ -64,66 +64,30 @@ st.markdown("""
 @st.cache_resource
 def load_model():
     try:
-        model = tf.keras.models.load_model("mnist_cnn.h5")
-    except Exception as e:import tensorflow as tf
-import matplotlib.pyplot as plt
-import numpy as np
-
-# 1. Load and preprocess data
-(x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
-x_train = x_train[..., tf.newaxis] / 255.0  # Shape: (60000, 28, 28, 1)
-x_test = x_test[..., tf.newaxis] / 255.0    # Shape: (10000, 28, 28, 1)
-
-# 2. Define CNN model 
-model = tf.keras.Sequential([
-    tf.keras.layers.InputLayer(input_shape=(28, 28, 1)),  
-    tf.keras.layers.Conv2D(32, 3, activation='relu'),
-    tf.keras.layers.MaxPooling2D(),
-    tf.keras.layers.Conv2D(64, 3, activation='relu'),
-    tf.keras.layers.MaxPooling2D(),
-    tf.keras.layers.Flatten(),
-    tf.keras.layers.Dropout(0.25),
-    tf.keras.layers.Dense(128, activation='relu'),
-    tf.keras.layers.Dense(10, activation='softmax')
-])
-
-# 3. Compile model
-model.compile(optimizer='adam',
-              loss='sparse_categorical_crossentropy',
-              metrics=['accuracy'])
-
-# 4. Train model
-model.fit(x_train, y_train, epochs=10, batch_size=64, validation_split=0.1)
-
-# Save the trained model
-model.save("mnist_cnn.keras")  
-
-# 5. Evaluate model
-test_loss, test_acc = model.evaluate(x_test, y_test)
-print(f"Test Accuracy: {test_acc:.2%}")
-
-# 6. Visualize predictions on 5 test images
-predictions = model.predict(x_test[:5])
-predicted_labels = np.argmax(predictions, axis=1)
-
-plt.figure(figsize=(10, 2))
-for i in range(5):
-    plt.subplot(1, 5, i + 1)
-    plt.imshow(x_test[i].squeeze(), cmap='gray')
-    plt.title(f"True: {y_test[i]}\nPred: {predicted_labels[i]}")
-    plt.axis('off')
-plt.tight_layout()
-plt.show()
-
-        st.error(f"Failed to load model: {str(e)}")
-        return None
+        # First try loading with the modern .keras format
+        model = tf.keras.models.load_model("mnist_cnn.keras")  # Modern format
+    except:
+        try:
+            # Fallback to .h5 with compatibility fix
+            custom_objects = {'InputLayer': tf.keras.layers.InputLayer}
+            model = tf.keras.models.load_model(
+                "mnist_cnn.h5",
+                custom_objects=custom_objects,
+                compile=False
+            )
+            model.compile(optimizer='adam',
+                        loss='sparse_categorical_crossentropy',
+                        metrics=['accuracy'])
+        except Exception as e:
+            st.error(f"Failed to load model: {str(e)}")
+            return None
     return model
 
 model = load_model()
 
 # Main title
-st.title("🧠 MNIST Digit Classifier")
-st.markdown("Upload an image of a handwritten digit (0-9)")
+st.title("MNIST Digit Classifier")
+st.write("Upload an image of a handwritten digit (0-9)")
 
 # File uploader
 uploaded_file = st.file_uploader(
