@@ -1,6 +1,1 @@
-streamlit
-tensorflow
-numpy
-matplotlib
-scikit-learn
-spacy
+streamlit\ntensorflow\nnumpy\npillow
