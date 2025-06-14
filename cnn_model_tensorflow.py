@@ -7,9 +7,10 @@ import numpy as np
 x_train = x_train[..., tf.newaxis] / 255.0  # Shape: (60000, 28, 28, 1)
 x_test = x_test[..., tf.newaxis] / 255.0    # Shape: (10000, 28, 28, 1)
 
-# 2. Define CNN model
+# 2. Define CNN model 
 model = tf.keras.Sequential([
-    tf.keras.layers.Conv2D(32, 3, activation='relu', input_shape=(28, 28, 1)),
+    tf.keras.layers.InputLayer(input_shape=(28, 28, 1)), 
+    tf.keras.layers.Conv2D(32, 3, activation='relu'),
     tf.keras.layers.MaxPooling2D(),
     tf.keras.layers.Conv2D(64, 3, activation='relu'),
     tf.keras.layers.MaxPooling2D(),
@@ -27,8 +28,8 @@ model.compile(optimizer='adam',
 # 4. Train model
 model.fit(x_train, y_train, epochs=10, batch_size=64, validation_split=0.1)
 
-# 🔐 Save the trained model
-model.save("mnist_cnn.h5")
+# 🔐 Save the trained model 
+model.save("mnist_cnn.keras") 
 
 # 5. Evaluate model
 test_loss, test_acc = model.evaluate(x_test, y_test)
@@ -46,6 +47,3 @@ for i in range(5):
     plt.axis('off')
 plt.tight_layout()
 plt.show()
-
-model.save("mnist_cnn.h5")
-

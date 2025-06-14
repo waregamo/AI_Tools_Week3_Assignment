@@ -1,26 +1,183 @@
 import streamlit as st
 import tensorflow as tf
 import numpy as np
+import pandas as pd
 from PIL import Image
 
-# Load the trained model
-model = tf.keras.models.load_model("mnist_cnn.h5")
+# Set page config 
+st.set_page_config(page_title="MNIST Digit Classifier", layout="centered")
 
+# Custom CSS for centered layout
+st.markdown("""
+<style>
+    .main {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+    .upload-box {
+        border: 2px dashed #ccc;
+        border-radius: 5px;
+        padding: 2rem;
+        text-align: center;
+        margin: 1rem 0;
+    }
+    .prediction-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+    .prediction-box {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        padding: 1.5rem;
+        width: 100%;
+        text-align: center;
+    }
+    .prediction-text {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #2e86c1;
+        margin: 0.5rem 0;
+    }
+    .image-container {
+        display: flex;
+        justify-content: center;
+        margin: 1rem 0;
+    }
+    .image-container img {
+        width: 200px;
+        height: 200px;
+        object-fit: contain;
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .chart-container {
+        width: 100%;
+        margin: 1rem auto;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+@st.cache_resource
+def load_model():
+    try:
+        model = tf.keras.models.load_model("mnist_cnn.h5")
+    except Exception as e:import tensorflow as tf
+import matplotlib.pyplot as plt
+import numpy as np
+
+# 1. Load and preprocess data
+(x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
+x_train = x_train[..., tf.newaxis] / 255.0  # Shape: (60000, 28, 28, 1)
+x_test = x_test[..., tf.newaxis] / 255.0    # Shape: (10000, 28, 28, 1)
+
+# 2. Define CNN model 
+model = tf.keras.Sequential([
+    tf.keras.layers.InputLayer(input_shape=(28, 28, 1)),  
+    tf.keras.layers.Conv2D(32, 3, activation='relu'),
+    tf.keras.layers.MaxPooling2D(),
+    tf.keras.layers.Conv2D(64, 3, activation='relu'),
+    tf.keras.layers.MaxPooling2D(),
+    tf.keras.layers.Flatten(),
+    tf.keras.layers.Dropout(0.25),
+    tf.keras.layers.Dense(128, activation='relu'),
+    tf.keras.layers.Dense(10, activation='softmax')
+])
+
+# 3. Compile model
+model.compile(optimizer='adam',
+              loss='sparse_categorical_crossentropy',
+              metrics=['accuracy'])
+
+# 4. Train model
+model.fit(x_train, y_train, epochs=10, batch_size=64, validation_split=0.1)
+
+# Save the trained model
+model.save("mnist_cnn.keras")  
+
+# 5. Evaluate model
+test_loss, test_acc = model.evaluate(x_test, y_test)
+print(f"Test Accuracy: {test_acc:.2%}")
+
+# 6. Visualize predictions on 5 test images
+predictions = model.predict(x_test[:5])
+predicted_labels = np.argmax(predictions, axis=1)
+
+plt.figure(figsize=(10, 2))
+for i in range(5):
+    plt.subplot(1, 5, i + 1)
+    plt.imshow(x_test[i].squeeze(), cmap='gray')
+    plt.title(f"True: {y_test[i]}\nPred: {predicted_labels[i]}")
+    plt.axis('off')
+plt.tight_layout()
+plt.show()
+
+        st.error(f"Failed to load model: {str(e)}")
+        return None
+    return model
+
+model = load_model()
+
+# Main title
 st.title("🧠 MNIST Digit Classifier")
-st.write("Upload a 28x28 grayscale image of a handwritten digit (0–9)")
+st.markdown("Upload an image of a handwritten digit (0-9)")
 
-uploaded_file = st.file_uploader("Choose a digit image...", type=["png", "jpg", "jpeg"])
+# File uploader
+uploaded_file = st.file_uploader(
+    "Choose an image...", 
+    type=["png", "jpg", "jpeg"],
+    label_visibility="collapsed"
+)
 
-if uploaded_file is not None:
-    image = Image.open(uploaded_file).convert("L").resize((28, 28))  # Grayscale + resize
-    st.image(image, caption="Uploaded Image", use_container_width=False)
-
-
-    img_array = np.array(image)
-    img_tensor = img_array.reshape(1, 28, 28, 1).astype("float32") / 255.0
-
-    prediction = model.predict(img_tensor)
-    predicted_digit = np.argmax(prediction)
-
-    st.subheader("🧮 Prediction:")
-    st.write(f"The model predicts this digit is: **{predicted_digit}**")
+if uploaded_file is not None and model is not None:
+    try:
+        # Process image
+        image = Image.open(uploaded_file).convert("L").resize((28, 28))
+        
+        # Display uploaded image (centered, medium size)
+        col1, col2, col3 = st.columns([1,2,1])
+        with col2:
+            st.image(
+                image, 
+                caption="Uploaded Image", 
+                use_container_width=False,
+                width=200
+            )
+        
+        # Prepare image for prediction
+        img_array = np.array(image)
+        img_array = 255 - img_array  # Invert if background is dark
+        img_tensor = img_array.reshape(1, 28, 28, 1).astype("float32") / 255.0
+        
+        # Make prediction
+        prediction = model.predict(img_tensor)
+        predicted_digit = np.argmax(prediction)
+        confidence = np.max(prediction)
+        
+        # Display prediction result
+        st.markdown("---")
+        st.markdown('<div class="prediction-container">', unsafe_allow_html=True)
+        
+        st.markdown('<div class="prediction-box">', unsafe_allow_html=True)
+        st.markdown("### Prediction")
+        st.markdown(f'<div class="prediction-text">{predicted_digit}</div>', unsafe_allow_html=True)
+        st.markdown(f'Confidence: {confidence*100:.1f}%')
+        st.markdown('</div>', unsafe_allow_html=True)
+        
+        # Show probability distribution
+        st.markdown('<div class="chart-container">', unsafe_allow_html=True)
+        st.markdown("#### Probability Distribution")
+        proba_df = pd.DataFrame({
+            'Digit': range(10),
+            'Probability': prediction[0]
+        })
+        st.bar_chart(proba_df.set_index('Digit'), use_container_width=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+        
+        st.markdown('</div>', unsafe_allow_html=True)
+        
+    except Exception as e:
+        st.error(f"Error processing image: {str(e)}")
