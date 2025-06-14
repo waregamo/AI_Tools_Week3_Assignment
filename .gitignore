@@ -1,0 +1,17 @@
+# Ignore virtual environments
+venv/
+tfenv/
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# System files
+.DS_Store
+
+# Jupyter notebook checkpoints
+.ipynb_checkpoints/
+
+# Others
+*.zip
+*.sqlite
