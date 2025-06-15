@@ -15,7 +15,7 @@ This repo contains Assignment 3 submission for the AI For Software Engineering C
 - `requirements.txt`: Install required Python libraries
 
 ## 🚀 Live Demo
-👉 Streamlit App Link:
+👉 Streamlit App Link:https://aitoolsweek3assignment-eoyx2lnrgahxtdigtmklrm.streamlit.app/
 
 ## 👨‍💻 Contributors
 1.Warega Moses (waregamoses20@gmail.com)
