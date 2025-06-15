@@ -1,16 +1,15 @@
 import tensorflow as tf
-import matplotlib.pyplot as plt
 import numpy as np
+import os
 
 # 1. Load and preprocess data
 (x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
-x_train = x_train[..., tf.newaxis] / 255.0  # Shape: (60000, 28, 28, 1)
-x_test = x_test[..., tf.newaxis] / 255.0    # Shape: (10000, 28, 28, 1)
+x_train = x_train[..., tf.newaxis] / 255.0
+x_test = x_test[..., tf.newaxis] / 255.0
 
-# 2. Define CNN model 
+# 2. Define and train model
 model = tf.keras.Sequential([
-    tf.keras.layers.InputLayer(input_shape=(28, 28, 1)), 
-    tf.keras.layers.Conv2D(32, 3, activation='relu'),
+    tf.keras.layers.Conv2D(32, 3, activation='relu', input_shape=(28, 28, 1)),
     tf.keras.layers.MaxPooling2D(),
     tf.keras.layers.Conv2D(64, 3, activation='relu'),
     tf.keras.layers.MaxPooling2D(),
@@ -20,30 +19,38 @@ model = tf.keras.Sequential([
     tf.keras.layers.Dense(10, activation='softmax')
 ])
 
-# 3. Compile model
 model.compile(optimizer='adam',
               loss='sparse_categorical_crossentropy',
               metrics=['accuracy'])
 
-# 4. Train model
-model.fit(x_train, y_train, epochs=10, batch_size=64, validation_split=0.1)
+# 3. Create models directory if it doesn't exist
+os.makedirs("models", exist_ok=True)
 
-# 🔐 Save the trained model 
-model.save("mnist_cnn.keras") 
+# 4. Add ModelCheckpoint callback to save during training
+checkpoint = tf.keras.callbacks.ModelCheckpoint(
+    "models/mnist_cnn.keras",
+    monitor='val_accuracy',
+    save_best_only=True,
+    mode='max'
+)
 
-# 5. Evaluate model
+# 5. Train model
+print("\nTraining model...")
+history = model.fit(
+    x_train, y_train,
+    epochs=10,
+    batch_size=64,
+    validation_split=0.1,
+    callbacks=[checkpoint]
+)
+
+# 6. Save final model (in both formats)
+model.save("models/mnist_cnn.keras")
+model.save("models/mnist_cnn.h5")
+print("\nModels saved successfully:")
+print(f"- models/mnist_cnn.keras")
+print(f"- models/mnist_cnn.h5")
+
+# 7. Evaluate
 test_loss, test_acc = model.evaluate(x_test, y_test)
-print(f"Test Accuracy: {test_acc:.2%}")
-
-# 6. Visualize predictions on 5 test images
-predictions = model.predict(x_test[:5])
-predicted_labels = np.argmax(predictions, axis=1)
-
-plt.figure(figsize=(10, 2))
-for i in range(5):
-    plt.subplot(1, 5, i + 1)
-    plt.imshow(x_test[i].squeeze(), cmap='gray')
-    plt.title(f"True: {y_test[i]}\nPred: {predicted_labels[i]}")
-    plt.axis('off')
-plt.tight_layout()
-plt.show()
+print(f"\nTest Accuracy: {test_acc:.2%}")
