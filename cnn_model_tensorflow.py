@@ -23,7 +23,7 @@ model.compile(optimizer='adam',
               loss='sparse_categorical_crossentropy',
               metrics=['accuracy'])
 
-# 3. Create models directory if it doesn't exist
+# 3. Create models directory 
 os.makedirs("models", exist_ok=True)
 
 # 4. Add ModelCheckpoint callback to save during training
