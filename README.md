@@ -16,7 +16,7 @@ This repo contains Assignment 3 submission for the AI For Software Engineering C
 
 ## 🚀 Live Demo
 👉 Streamlit App Link:https://aitoolsweek3assignment-eoyx2lnrgahxtdigtmklrm.streamlit.app/
-
+   presentation link: https://drive.google.com/file/d/16-ibRu-mkOeToV4rVuTVNYe82c7tvidX/view?usp=sharing
 ## 👨‍💻 Contributors
 1.Warega Moses (waregamoses20@gmail.com)
 2.Sheila Wambui (muriukisheila33@gmail.com)
